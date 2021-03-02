@@ -1,64 +1,84 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 public class Main {
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        int[][] network = new int[21][21];
-        for (int i = 1; i < 20; i++) {
+        int size = Integer.parseInt(reader.readLine());
+        int[][] network = new int[size][size];
+        int[][] visited = new int[size][size];
+
+        for (int i = 0; i < size; i++) {
             String netWorkInput = reader.readLine();
-            String[] split = netWorkInput.split(" ");
+            String[] split = netWorkInput.split("");
             for (int j = 0; j < split.length; j++) {
-                network[i][j + 1] = Integer.parseInt(split[j]);
+                network[i][j] = Integer.parseInt(split[j]);
             }
         }
+        Point point = new Point(0, -1);
+        List<Integer> answer = new ArrayList<>();
 
-        Point point = findPoint(network, new Point(1, 1));
-        do {
-            int[] directionX = {1, -1, 1, -1, -1, 1, 0, 0};
-            int[] directionY = {1, -1, 0, 0, 1, -1, 1, -1};
+        while (point.getX() != size || point.getY() != size) {
+            point = findPoint(network, visited, point);
+            if (point.getX() == -1 && point.getY() == -1) {
+                break;
+            }
+            answer.add(bfs(network, visited, point, size));
+        }
+        System.out.println(answer.size());
+        answer.stream()
+            .sorted()
+            .forEach(System.out::println);
+    }
 
-            for (int i = 0; i < directionX.length; i = i + 2) {
-                int count = dfs(network, directionX[i], directionY[i], point.getX(), point.getY())
-                    + dfs(network, directionX[i + 1], directionY[i + 1], point.getX(), point.getY());
-                if (count == 4) {
-                    System.out.println(network[point.getX()][point.getY()]);
-                    System.out.println(point.getX() + " " + point.getY());
-                    return;
+    private static int bfs(int[][] network, int[][] visited, Point point, int size) {
+        Queue<Point> points = new LinkedList<>();
+        points.add(point);
+        int[] directionX = {1, -1, 0, 0};
+        int[] directionY = {0, 0, -1, 1};
+        int count = 1;
+        visited[point.getX()][point.getY()] = 1;
+
+        while (!points.isEmpty()) {
+            Point now = points.remove();
+            for (int i = 0; i < directionX.length; i++) {
+                Point nextPoint = new Point(now.getX() + directionX[i], now.getY() + directionY[i]);
+                if (nextPoint.getX() < 0 || nextPoint.getX() >= size ||
+                    nextPoint.getY() < 0 || nextPoint.getY() >= size) {
+                    continue;
                 }
+                if (network[nextPoint.getX()][nextPoint.getY()] == 0) {
+                    continue;
+                }
+                if (visited[nextPoint.getX()][nextPoint.getY()] != 0) {
+                    continue;
+                }
+                count++;
+                visited[nextPoint.getX()][nextPoint.getY()] = 1;
+                points.add(nextPoint);
             }
-            point = findPoint(network, point);
-        } while (point.getX() != 20 || point.getY() != 20);
-        System.out.println(0);
+        }
+        return count;
     }
 
-    private static int dfs(int[][] network, int directionX, int directionY, int nowX, int nowY) {
-        int nextX = nowX + directionX;
-        int nextY = nowY + directionY;
-        if (nextX < 1 || nextX > 20 || nextY < 1 || nextY > 20) {
-            return 0;
-        }
-        if (network[nextX][nextY] == 0 || network[nextX][nextY] != network[nowX][nowY]) {
-            return 0;
-        }
-        return dfs(network, directionX, directionY, nextX, nextY) + 1;
-    }
-
-
-    private static Point findPoint(int[][] network, Point beforePoint) {
+    private static Point findPoint(int[][] network, int[][] visited, Point beforePoint) {
         int beforeX = beforePoint.getX();
-        int beforeY = beforePoint.getY();
+        int beforeY = beforePoint.getY() + 1;
         for (int i = beforeX; i < network.length; i++) {
-            for (int j = beforeY + 1; j < network.length; j++) {
-                if (network[i][j] != 0) {
+            for (int j = beforeY; j < network.length; j++) {
+                if (network[i][j] == 1 && visited[i][j] == 0) {
                     return new Point(i, j);
                 }
             }
             beforeY = 0;
         }
-        return new Point(20, 20);
+        return new Point(-1, -1);
     }
 }
 
