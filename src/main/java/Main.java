@@ -14,14 +14,17 @@ public class Main {
         int[] cache = new int[size];
         cache[0] = 1;
 
-        for (int i = 1; i < size; i++) {
+        for (int i = 0; i < size; i++) {
             for (int j = 0; j < i; j++) {
                 if (numbers[i] > numbers[j]) {
-                    cache[i] = cache[i - 1] + 1;
+                    cache[i] = Math.max(cache[j] + 1, cache[i]);
                 }
             }
+            if (cache[i] == 0) {
+                cache[i] = 1;
+            }
         }
-        System.out.println(cache);
+        System.out.println(Arrays.stream(cache).max().getAsInt());
     }
 }
 
