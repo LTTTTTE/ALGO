@@ -1,25 +1,28 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 
 public class Main {
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        String[] sizes = reader.readLine().split(" ");
-        int boundX = Integer.parseInt(sizes[0]);
-        int boundY = Integer.parseInt(sizes[1]);
-        int[][] network = new int[boundX][boundY];
-        for (int i = 0; i < boundX; i++) {
-            network[i] = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
-        }
+        int number = Integer.parseInt(reader.readLine());
+        int doubleBound = (int) Math.sqrt(number);
+        boolean[] cache = new boolean[(int) (number * 1.7)];
+        int count = 0;
 
-        for (int i = 0; i < boundX; i++) {
-            for (int j = 0; j < boundY; j++) {
-                if (network[i][j] == 0) {
-                    network[i][j] = 1;
-                }
+        for (int i = 2; i <= doubleBound; i++) {
+            for (int j = 1; i * i * j <= number; j++) {
+                cache[i * i * j] = true;
+            }
+        }
+        for (int i = 1; i < cache.length; i++) {
+            if (!cache[i]) {
+                count++;
+            }
+            if (count == number) {
+                System.out.println(i);
+                break;
             }
         }
     }
