@@ -1,29 +1,32 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 
 public class Main {
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        int number = Integer.parseInt(reader.readLine());
-        int doubleBound = (int) Math.sqrt(number);
-        boolean[] cache = new boolean[(int) (number * 1.7)];
+        int size = Integer.parseInt(reader.readLine());
         int count = 0;
 
-        for (int i = 2; i <= doubleBound; i++) {
-            for (int j = 1; i * i * j <= number; j++) {
-                cache[i * i * j] = true;
+        int[] numbers = Arrays.stream(reader.readLine().split(" "))
+            .mapToInt(Integer::parseInt)
+            .toArray();
+
+        boolean[] cache = new boolean[1001];
+        cache[0] = true;
+        cache[1] = true;
+        for (int i = 2; i < 1000; i++) {
+            for (int j = 2; i * j <= 1000; j++) {
+                cache[i * j] = true;
             }
         }
-        for (int i = 1; i < cache.length; i++) {
-            if (!cache[i]) {
+        for(int i : numbers) {
+            if(!cache[i]) {
                 count++;
             }
-            if (count == number) {
-                System.out.println(i);
-                break;
-            }
         }
+        System.out.println(count);
     }
 }
