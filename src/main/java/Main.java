@@ -6,24 +6,22 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        int number = Integer.parseInt(reader.readLine());
-        int doubleBound = (int) Math.sqrt(number);
-        boolean[] cache = new boolean[(int) (number * 1.7)];
+        String[] inputs = reader.readLine().split(" ");
+        int species = Integer.parseInt(inputs[0]);
+        int charge = Integer.parseInt(inputs[1]);
+        int[] coins = new int[species];
+        for (int i = 0; i < species; i++) {
+            coins[i] = Integer.parseInt(reader.readLine());
+        }
         int count = 0;
-
-        for (int i = 2; i <= doubleBound; i++) {
-            for (int j = 1; i * i * j <= number; j++) {
-                cache[i * i * j] = true;
+        while (charge != 0) {
+            for (int i = species - 1; i >= 0; i--) {
+                while(coins[i] <= charge) {
+                    charge -= coins[i];
+                    count++;
+                }
             }
         }
-        for (int i = 1; i < cache.length; i++) {
-            if (!cache[i]) {
-                count++;
-            }
-            if (count == number) {
-                System.out.println(i);
-                break;
-            }
-        }
+        System.out.println(count);
     }
 }
