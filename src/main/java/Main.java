@@ -3,81 +3,74 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
+import java.util.stream.Collectors;
 
 public class Main {
 
-    static int IMPORTANT_1;
-    static int IMPORTANT_2;
-
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        String[] countInputs = reader.readLine().split(" ");
-        int pointCount = Integer.parseInt(countInputs[0]);
-        int lineCount = Integer.parseInt(countInputs[1]);
-        int[] distance = new int[pointCount + 1];
+        int pointCount = Integer.parseInt(reader.readLine());
+        int lineCount = Integer.parseInt(reader.readLine());
+
         Map<Integer, List<Line>> map = new HashMap<>();
-        PriorityQueue<Line> queue = new PriorityQueue<>(Comparator.comparingInt(Line::getWeight));
+        int[] distance = new int[pointCount + 1];
+        int[] path = new int[pointCount + 1];
+        for (int i = 1; i <= pointCount; i++) {
+            distance[i] = Integer.MAX_VALUE;
+        }
 
         for (int i = 0; i < lineCount; i++) {
             int[] inputs = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
             if (!map.containsKey(inputs[0])) {
                 map.put(inputs[0], new ArrayList<>());
             }
-            if (!map.containsKey(inputs[1])) {
-                map.put(inputs[1], new ArrayList<>());
-            }
             map.get(inputs[0]).add(new Line(inputs[1], inputs[2]));
-            map.get(inputs[1]).add(new Line(inputs[0], inputs[2]));
         }
-        String[] importantPoints = reader.readLine().split(" ");
-        IMPORTANT_1 = Integer.parseInt(importantPoints[0]);
-        IMPORTANT_2 = Integer.parseInt(importantPoints[1]);
 
-        int answer = Integer.MAX_VALUE;
-        int total = 0;
-        int[][] points = new int[][]{{1, IMPORTANT_1, IMPORTANT_2, pointCount},
-            {1, IMPORTANT_2, IMPORTANT_1, pointCount}};
+        String[] locationInput = reader.readLine().split(" ");
+        int startPoint = Integer.parseInt(locationInput[0]);
+        int endPoint = Integer.parseInt(locationInput[1]);
 
-        for (int p = 0; p < points.length; p++) {
-            for (int q = 0; q < points[0].length - 1; q++) {
-                for (int i = 1; i <= pointCount; i++) {
-                    distance[i] = Integer.MAX_VALUE;
-                }
-                if (points[p][q] == points[p][q + 1]) { // 중요
-                    continue;
-                }
-                queue.add(new Line(points[p][q], 0));
-                while (!queue.isEmpty()) {
-                    Line now = queue.remove();
-                    if (now.getWeight() > distance[now.getEnd()]) {
-                        continue;
-                    }
-                    List<Line> value = map.get(now.getEnd());
-                    Optional.ofNullable(value).orElse(new ArrayList<>())
-                        .forEach(x -> {
-                            if (x.getWeight() + now.getWeight() < distance[x.getEnd()]) {
-                                distance[x.getEnd()] = x.getWeight() + now.getWeight();
-                                queue.add(new Line(x.getEnd(), distance[x.getEnd()]));
-                            }
-                        });
-                }
-                total += distance[points[p][q + 1]];
-                if (total == Integer.MAX_VALUE) {
-                    System.out.println(-1);
-                    System.exit(0);
-                }
+        PriorityQueue<Line> queue = new PriorityQueue<>(Comparator.comparingInt(Line::getWeight));
+        queue.add(new Line(startPoint, 0));
+
+        while (!queue.isEmpty()) {
+            Line now = queue.remove();
+
+            if (distance[now.getEnd()] < now.getWeight()) {
+                continue;
             }
 
-            answer = Integer.min(answer, total);
-            total = 0;
+            List<Line> nextPoints = Optional.ofNullable(map.get(now.getEnd())).orElse(new ArrayList<>());
+
+            nextPoints.forEach(next -> {
+                if (distance[next.getEnd()] > now.getWeight() + next.getWeight()) {
+                    distance[next.getEnd()] = now.getWeight() + next.getWeight();
+                    queue.add(new Line(next.getEnd(), distance[next.getEnd()]));
+                    path[next.getEnd()] = now.getEnd();
+                }
+            });
         }
-        System.out.println(answer);
+        distance[1] = 0;
+        int minDistance = distance[endPoint];
+        List<Integer> answer = new ArrayList<>();
+        int point = endPoint;
+        while (point != startPoint) {
+            answer.add(point);
+            point = path[point];
+        }
+        answer.add(startPoint);
+        Collections.reverse(answer);
+        System.out.println(minDistance);
+        System.out.println(answer.size());
+        System.out.println(answer.stream().map(String::valueOf).collect(Collectors.joining(" ")));
     }
 }
 
