@@ -1,91 +1,84 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.PriorityQueue;
-import java.util.stream.Collectors;
 
 public class Main {
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        int pointCount = Integer.parseInt(reader.readLine());
-        int lineCount = Integer.parseInt(reader.readLine());
+        int size = Integer.parseInt(reader.readLine());
 
-        Map<Integer, List<Line>> map = new HashMap<>();
-        int[] distance = new int[pointCount + 1];
-        int[] path = new int[pointCount + 1];
-        for (int i = 1; i <= pointCount; i++) {
-            distance[i] = Integer.MAX_VALUE;
+        int[][] network = new int[size][size];
+        int[][] distance = new int[size][size];
+        boolean[][] visited = new boolean[size][size];
+
+        for (int i = 0; i < size; i++) {
+            network[i] = Arrays.stream(reader.readLine().split("")).mapToInt(Main::mapChanger).toArray();
         }
 
-        for (int i = 0; i < lineCount; i++) {
-            int[] inputs = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
-            if (!map.containsKey(inputs[0])) {
-                map.put(inputs[0], new ArrayList<>());
+        for (int i = 0; i < distance.length; i++) {
+            for (int j = 0; j < distance[0].length; j++) {
+                distance[i][j] = Integer.MAX_VALUE;
             }
-            map.get(inputs[0]).add(new Line(inputs[1], inputs[2]));
         }
 
-        String[] locationInput = reader.readLine().split(" ");
-        int startPoint = Integer.parseInt(locationInput[0]);
-        int endPoint = Integer.parseInt(locationInput[1]);
-
-        PriorityQueue<Line> queue = new PriorityQueue<>(Comparator.comparingInt(Line::getWeight));
-        queue.add(new Line(startPoint, 0));
+        PriorityQueue<Point> queue = new PriorityQueue<>(Comparator.comparingInt(Point::getWeight));
+        queue.add(new Point(0, 0, 0));
+        visited[0][0] = true;
+        int[] directionX = {1, 0, -1, 0};
+        int[] directionY = {0, 1, 0, -1};
 
         while (!queue.isEmpty()) {
-            Line now = queue.remove();
-
-            if (distance[now.getEnd()] < now.getWeight()) {
-                continue;
+            Point now = queue.remove();
+            if (now.getX() == size - 1 && now.getY() == size - 1) {
+                break;
             }
 
-            List<Line> nextPoints = Optional.ofNullable(map.get(now.getEnd())).orElse(new ArrayList<>());
-
-            nextPoints.forEach(next -> {
-                if (distance[next.getEnd()] > now.getWeight() + next.getWeight()) {
-                    distance[next.getEnd()] = now.getWeight() + next.getWeight();
-                    queue.add(new Line(next.getEnd(), distance[next.getEnd()]));
-                    path[next.getEnd()] = now.getEnd();
+            if (distance[now.getX()][now.getY()] < now.getWeight()) {
+                continue;
+            }
+            for (int i = 0; i < directionX.length; i++) {
+                int nextX = now.getX() + directionX[i];
+                int nextY = now.getY() + directionY[i];
+                if (nextX >= size || nextY >= size || nextX < 0 || nextY < 0) {
+                    continue;
                 }
-            });
+                if (distance[nextX][nextY] > network[nextX][nextY] && !visited[nextX][nextY]) {
+                    distance[nextX][nextY] = now.getWeight() + network[nextX][nextY];
+                    queue.add(new Point(nextX, nextY, distance[nextX][nextY]));
+                    visited[nextX][nextY] = true;
+                }
+            }
         }
-        distance[1] = 0;
-        int minDistance = distance[endPoint];
-        List<Integer> answer = new ArrayList<>();
-        int point = endPoint;
-        while (point != startPoint) {
-            answer.add(point);
-            point = path[point];
-        }
-        answer.add(startPoint);
-        Collections.reverse(answer);
-        System.out.println(minDistance);
-        System.out.println(answer.size());
-        System.out.println(answer.stream().map(String::valueOf).collect(Collectors.joining(" ")));
+        System.out.println(distance[size - 1][size - 1]);
+    }
+
+    private static int mapChanger(String input) {
+        return input.equals("1") ? 0 : 1;
     }
 }
 
-class Line {
+class Point {
 
-    private final int end;
+    private final int x;
+    private final int y;
     private final int weight;
 
-    public Line(int end, int weight) {
-        this.end = end;
+    public Point(int x, int y, int weight) {
+        this.x = x;
+        this.y = y;
         this.weight = weight;
     }
 
-    public int getEnd() {
-        return end;
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
     }
 
     public int getWeight() {
