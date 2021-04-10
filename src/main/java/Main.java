@@ -7,6 +7,8 @@ import java.util.Queue;
 
 public class Main {
 
+    static Point answer;
+
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String[] inputs = reader.readLine().split(" ");
@@ -15,7 +17,6 @@ public class Main {
 
         int[][] network = new int[sizeX][sizeY];
         int[][] visited = new int[sizeX][sizeY];
-        int[][] power = new int[sizeX][sizeY];
 
         for (int i = 0; i < sizeX; i++) {
             network[i] = Arrays.stream(reader.readLine().split("")).mapToInt(Integer::parseInt).toArray();
@@ -26,40 +27,42 @@ public class Main {
         }
 
         Queue<Point> queue = new LinkedList<>();
-        queue.add(new Point(0, 0, 1, 1));
-        power[0][0] = 1;
+        queue.add(new Point(0, 0, 1, 0));
         visited[0][0] = 1;
 
         int[] dx = {1, 0, -1, 0};
         int[] dy = {0, 1, 0, -1};
         while (!queue.isEmpty()) {
             Point now = queue.remove();
+            if (now.getX() == sizeX - 1 && now.getY() == sizeY - 1) {
+                answer = now;
+                break;
+            }
             for (int i = 0; i < dx.length; i++) {
                 int nextX = now.getX() + dx[i];
                 int nextY = now.getY() + dy[i];
                 if (nextX < 0 || nextY < 0 || nextX >= sizeX || nextY >= sizeY) {
                     continue;
                 }
-                if (now.getDistance() > visited[nextX][nextY]) {
+                if (now.getPower() >= visited[nextX][nextY]) {
                     continue;
                 }
-                if (now.getPower() == 1 && network[nextX][nextY] == 1) {
-//                    power[nextX][nextY] = 0;d
-                    queue.add(new Point(nextX, nextY,visited[now.getX()][now.getY()] + 1, 0));
-                    visited[nextX][nextY] = visited[now.getX()][now.getY()] + 1;
+                if (now.getPower() == 0 && network[nextX][nextY] == 1) {
+                    queue.add(new Point(nextX, nextY, now.getDistance() + 1, now.getPower() + 1));
+                    visited[nextX][nextY] = now.getPower() + 1;
                     continue;
                 }
 
                 if (network[nextX][nextY] == 0) {
-                    queue.add(new Point(nextX, nextY,visited[now.getX()][now.getY()] + 1, now.getPower()));
-                    visited[nextX][nextY] = visited[now.getX()][now.getY()] + 1;
+                    queue.add(new Point(nextX, nextY, now.getDistance() + 1, now.getPower()));
+                    visited[nextX][nextY] = now.getPower();
                 }
             }
         }
-        if (visited[sizeX - 1][sizeY - 1] == 0) {
+        if (answer == null) {
             System.out.println(-1);
         } else {
-            System.out.println(visited[sizeX - 1][sizeY - 1]);
+            System.out.println(answer.getDistance());
         }
     }
 }
