@@ -8,27 +8,31 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        String[] init = reader.readLine().split(" ");
-        int size = Integer.parseInt(init[0]);
-        int stateSize = Integer.parseInt(init[1]);
+
+        int size = Integer.parseInt(reader.readLine());
+        int stateSize = Integer.parseInt(reader.readLine());
 
         parent = new int[size + 1];
         for (int i = 0; i <= size; i++) {
             parent[i] = i;
         }
 
-        for (int i = 0; i < stateSize; i++) {
+        for (int i = 0; i < size; i++) {
             String[] inputs = reader.readLine().split(" ");
-            if (inputs[0].equals("0")) {
-                union(Integer.parseInt(inputs[1]), Integer.parseInt(inputs[2]));
-            } else {
-                if (find(Integer.parseInt(inputs[1])) == find(Integer.parseInt(inputs[2]))) {
-                    System.out.println("YES");
-                } else {
-                    System.out.println("NO");
+            for (int j = i; j < size; j++) {
+                if (inputs[j].equals("1")) {
+                    union(i, j);
                 }
             }
         }
+        String[] plan = reader.readLine().split(" ");
+        for (int i = 0; i < plan.length - 1; i++) {
+            if (find(Integer.parseInt(plan[i]) - 1) != find(Integer.parseInt(plan[i + 1]) - 1)) {
+                System.out.println("NO");
+                return;
+            }
+        }
+        System.out.println("YES");
     }
 
     public static int find(int index) {
