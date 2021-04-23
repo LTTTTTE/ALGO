@@ -8,31 +8,30 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String[] init = reader.readLine().split(" ");
+        int size = Integer.parseInt(init[0]);
+        int stateSize = Integer.parseInt(init[1]);
 
-        int size = Integer.parseInt(reader.readLine());
-        int stateSize = Integer.parseInt(reader.readLine());
-
-        parent = new int[size + 1];
-        for (int i = 0; i <= size; i++) {
+        parent = new int[size];
+        for (int i = 0; i < size; i++) {
             parent[i] = i;
         }
 
-        for (int i = 0; i < size; i++) {
+        for (int i = 1; i <= stateSize; i++) {
             String[] inputs = reader.readLine().split(" ");
-            for (int j = i; j < size; j++) {
-                if (inputs[j].equals("1")) {
-                    union(i, j);
-                }
-            }
-        }
-        String[] plan = reader.readLine().split(" ");
-        for (int i = 0; i < plan.length - 1; i++) {
-            if (find(Integer.parseInt(plan[i]) - 1) != find(Integer.parseInt(plan[i + 1]) - 1)) {
-                System.out.println("NO");
+            int first = Integer.parseInt(inputs[0]);
+            int second = Integer.parseInt(inputs[1]);
+
+            int firstParent = find(first);
+            int secondParent = find(second);
+            if (firstParent == secondParent) {
+                System.out.println(i);
                 return;
+            } else {
+                parent[firstParent] = secondParent;
             }
         }
-        System.out.println("YES");
+        System.out.println(0);
     }
 
     public static int find(int index) {
@@ -40,14 +39,6 @@ public class Main {
             return index;
         } else {
             return parent[index] = find(parent[index]);
-        }
-    }
-
-    public static void union(int first, int second) {
-        first = find(first);
-        second = find(second);
-        if (first != second) {
-            parent[second] = first;
         }
     }
 }
