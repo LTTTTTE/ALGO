@@ -1,44 +1,55 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 
 public class Main {
 
-    static int[] parent;
-
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        String[] init = reader.readLine().split(" ");
-        int size = Integer.parseInt(init[0]);
-        int stateSize = Integer.parseInt(init[1]);
+        int size = Integer.parseInt(reader.readLine());
 
-        parent = new int[size];
-        for (int i = 0; i < size; i++) {
-            parent[i] = i;
-        }
+        int[] parents = new int[size + 1];
+        boolean[] visited = new boolean[size + 1];
 
-        for (int i = 1; i <= stateSize; i++) {
+        Map<Integer, List<Integer>> tree = new HashMap<>();
+
+        for (int i = 1; i < size; i++) {
             String[] inputs = reader.readLine().split(" ");
-            int first = Integer.parseInt(inputs[0]);
-            int second = Integer.parseInt(inputs[1]);
+            int firstInput = Integer.parseInt(inputs[0]);
+            int secondInput = Integer.parseInt(inputs[1]);
 
-            int firstParent = find(first);
-            int secondParent = find(second);
-            if (firstParent == secondParent) {
-                System.out.println(i);
-                return;
-            } else {
-                parent[firstParent] = secondParent;
+            if (!tree.containsKey(firstInput)) {
+                tree.put(firstInput, new ArrayList<>());
             }
-        }
-        System.out.println(0);
-    }
+            tree.get(firstInput).add(secondInput);
 
-    public static int find(int index) {
-        if (parent[index] == index) {
-            return index;
-        } else {
-            return parent[index] = find(parent[index]);
+            if (!tree.containsKey(secondInput)) {
+                tree.put(secondInput, new ArrayList<>());
+            }
+            tree.get(secondInput).add(firstInput);
+        }
+        int start = 1;
+        Queue<Integer> queue = new LinkedList<>();
+        queue.add(start);
+        while (!queue.isEmpty()) {
+            int nowParent = queue.remove();
+            tree.get(nowParent).forEach(child -> {
+                if (!visited[child]) {
+                    parents[child] = nowParent;
+                    visited[child] = true;
+                    queue.add(child);
+                }
+            });
+        }
+
+        for (int i = 2; i < parents.length; i++) {
+            System.out.println(parents[i]);
         }
     }
 }
