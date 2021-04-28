@@ -4,99 +4,126 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Queue;
 
 public class Main {
+
+    static int[] column;
+    static int[] indexs;
+    static int[] row;
+    static int index = 0;
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         int size = Integer.parseInt(reader.readLine());
-        Map<Integer, List<Line>> map = new HashMap<>();
-        int[] distance = new int[size + 1];
-        Arrays.fill(distance, Integer.MAX_VALUE);
+        column = new int[size];
+        indexs = new int[size + 1];
+        row = new int[size];
 
-        for (int i = 1; i < size; i++) {
+        Map<Integer, Node> tree = new HashMap<>();
+        for (int i = 0; i < size; i++) {
             int[] inputs = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
-            if (!map.containsKey(inputs[0])) {
-                map.put(inputs[0], new ArrayList<>());
+            for (int input : inputs) {
+                if (input != -1) {
+                    tree.putIfAbsent(input, new Node(input));
+                }
             }
-            if (!map.containsKey(inputs[1])) {
-                map.put(inputs[1], new ArrayList<>());
+            if (inputs[1] != -1) {
+                tree.get(inputs[0]).setLeft(tree.get(inputs[1]));
+                tree.get(inputs[1]).setParent(tree.get(inputs[0]));
             }
-            map.get(inputs[0]).add(new Line(inputs[1], inputs[2]));
-            map.get(inputs[1]).add(new Line(inputs[0], inputs[2]));
+            if (inputs[2] != -1) {
+                tree.get(inputs[0]).setRight(tree.get(inputs[2]));
+                tree.get(inputs[2]).setParent(tree.get(inputs[0]));
+            }
+        }
+        Node root = findRoot(tree.get(tree.keySet().stream().findFirst().get()));
+        mid(root, 1);
+
+        Map<Integer, List<Integer>> map = new HashMap<>();
+        for (int i = 0; i < row.length; i++) {
+            if (!map.containsKey(row[i])) {
+                map.put(row[i], new ArrayList<>());
+            }
+            map.get(row[i]).add(indexs[column[i]]);
         }
 
-        Queue<Line> queue = new LinkedList<>();
-        queue.add(new Line(1, 0));
-        distance[1] = 0;
+        int[] maxes = new int[map.size() + 1];
+        int answer = 0;
+        int answerLevel = 0;
+        for (int i = 1; i < maxes.length; i++) {
+            int width;
+            if (map.get(i).size() < 2) {
+                width = 1;
+            } else {
+                int min = map.get(i).stream().mapToInt(x -> x).min().orElse(map.get(i).get(0));
+                int max = map.get(i).stream().mapToInt(x -> x).max().orElse(map.get(i).get(0));
+                width = max - min + 1;
+            }
+            if (answer < width) {
+                answer = width;
+                answerLevel = i;
+            }
+        }
+        System.out.println(answerLevel + " " + answer);
+    }
 
-        while (!queue.isEmpty()) {
-            Line now = queue.remove();
-            if (distance[now.getEnd()] < now.getWeight()) {
-                continue;
-            }
-            Optional.ofNullable(map.get(now.getEnd())).orElse(new ArrayList<>())
-                .forEach(x -> {
-                    if (x.getWeight() + now.getWeight() < distance[x.getEnd()]) {
-                        distance[x.getEnd()] = x.getWeight() + now.getWeight();
-                        queue.add(new Line(x.getEnd(), distance[x.getEnd()]));
-                    }
-                });
+    private static Node findRoot(Node node) {
+        if (node.getParent() == null) {
+            return node;
         }
-        distance[0] = 0;
-        int max = Arrays.stream(distance).max().orElse(0);
-        List<Integer> farIndex = new ArrayList<>();
-        for (int i = 0; i < distance.length; i++) {
-            if (distance[i] == max) {
-                farIndex.add(i);
-            }
-        }
-        if (farIndex.size() > 1) {
-            System.out.println(max * 2);
+        return findRoot(node.getParent());
+    }
+
+    public static void mid(Node node, int level) {
+        if (node == null) {
             return;
         }
-
-        Arrays.fill(distance, Integer.MAX_VALUE);
-        queue.add(new Line(farIndex.get(0), 0));
-        distance[farIndex.get(0)] = 0;
-        while (!queue.isEmpty()) {
-            Line now = queue.remove();
-            if (distance[now.getEnd()] < now.getWeight()) {
-                continue;
-            }
-            Optional.ofNullable(map.get(now.getEnd())).orElse(new ArrayList<>())
-                .forEach(x -> {
-                    if (x.getWeight() + now.getWeight() < distance[x.getEnd()]) {
-                        distance[x.getEnd()] = x.getWeight() + now.getWeight();
-                        queue.add(new Line(x.getEnd(), distance[x.getEnd()]));
-                    }
-                });
-        }
-        distance[0] = 0;
-        System.out.println(Arrays.stream(distance).max().orElse(0));
+        mid(node.getLeft(), level + 1);
+        column[index++] = node.getData();
+        indexs[node.getData()] = index;
+        row[index - 1] = level;
+        mid(node.getRight(), level + 1);
     }
 }
 
-class Line {
+class Node {
 
-    private final int end;
-    private final int weight;
+    private final int data;
+    private Node left;
+    private Node right;
+    private Node parent;
 
-    public Line(int end, int weight) {
-        this.end = end;
-        this.weight = weight;
+    public Node(int data) {
+        this.data = data;
     }
 
-    public int getEnd() {
-        return end;
+    public int getData() {
+        return data;
     }
 
-    public int getWeight() {
-        return weight;
+    public Node getLeft() {
+        return left;
+    }
+
+    public Node getRight() {
+        return right;
+    }
+
+    public void setLeft(Node left) {
+        this.left = left;
+    }
+
+    public void setRight(Node right) {
+        this.right = right;
+    }
+
+    public Node getParent() {
+        return parent;
+    }
+
+    public void setParent(Node parent) {
+        this.parent = parent;
     }
 }
