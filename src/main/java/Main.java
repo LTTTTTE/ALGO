@@ -1,93 +1,102 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Queue;
 
 public class Main {
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         int size = Integer.parseInt(reader.readLine());
+        Map<Integer, List<Line>> map = new HashMap<>();
+        int[] distance = new int[size + 1];
+        Arrays.fill(distance, Integer.MAX_VALUE);
 
-        Map<String, Node> tree = new HashMap<>();
-        for (int i = 0; i < size; i++) {
-            String[] inputs = reader.readLine().split(" ");
-            for (String input : inputs) {
-                if (!input.equals(".")) {
-                    tree.putIfAbsent(input, new Node(input));
-                }
+        for (int i = 1; i < size; i++) {
+            int[] inputs = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
+            if (!map.containsKey(inputs[0])) {
+                map.put(inputs[0], new ArrayList<>());
             }
-            if (!inputs[1].equals(".")) {
-                tree.get(inputs[0]).setLeft(tree.get(inputs[1]));
+            if (!map.containsKey(inputs[1])) {
+                map.put(inputs[1], new ArrayList<>());
             }
-            if (!inputs[2].equals(".")) {
-                tree.get(inputs[0]).setRight(tree.get(inputs[2]));
-            }
+            map.get(inputs[0]).add(new Line(inputs[1], inputs[2]));
+            map.get(inputs[1]).add(new Line(inputs[0], inputs[2]));
         }
 
-        first(tree.get("A"));
-        System.out.println();
-        mid(tree.get("A"));
-        System.out.println();
-        last(tree.get("A"));
-    }
+        Queue<Line> queue = new LinkedList<>();
+        queue.add(new Line(1, 0));
+        distance[1] = 0;
 
-    public static void first(Node node) {
-        if (node == null) {
+        while (!queue.isEmpty()) {
+            Line now = queue.remove();
+            if (distance[now.getEnd()] < now.getWeight()) {
+                continue;
+            }
+            Optional.ofNullable(map.get(now.getEnd())).orElse(new ArrayList<>())
+                .forEach(x -> {
+                    if (x.getWeight() + now.getWeight() < distance[x.getEnd()]) {
+                        distance[x.getEnd()] = x.getWeight() + now.getWeight();
+                        queue.add(new Line(x.getEnd(), distance[x.getEnd()]));
+                    }
+                });
+        }
+        distance[0] = 0;
+        int max = Arrays.stream(distance).max().orElse(0);
+        List<Integer> farIndex = new ArrayList<>();
+        for (int i = 0; i < distance.length; i++) {
+            if (distance[i] == max) {
+                farIndex.add(i);
+            }
+        }
+        if (farIndex.size() > 1) {
+            System.out.println(max * 2);
             return;
         }
-        System.out.print(node.getData());
-        first(node.getLeft());
-        first(node.getRight());
-    }
 
-    public static void mid(Node node) {
-        if (node == null) {
-            return;
+        Arrays.fill(distance, Integer.MAX_VALUE);
+        queue.add(new Line(farIndex.get(0), 0));
+        distance[farIndex.get(0)] = 0;
+        while (!queue.isEmpty()) {
+            Line now = queue.remove();
+            if (distance[now.getEnd()] < now.getWeight()) {
+                continue;
+            }
+            Optional.ofNullable(map.get(now.getEnd())).orElse(new ArrayList<>())
+                .forEach(x -> {
+                    if (x.getWeight() + now.getWeight() < distance[x.getEnd()]) {
+                        distance[x.getEnd()] = x.getWeight() + now.getWeight();
+                        queue.add(new Line(x.getEnd(), distance[x.getEnd()]));
+                    }
+                });
         }
-        mid(node.getLeft());
-        System.out.print(node.getData());
-        mid(node.getRight());
-    }
-
-    public static void last(Node node) {
-        if (node == null) {
-            return;
-        }
-        last(node.getLeft());
-        last(node.getRight());
-        System.out.print(node.getData());
+        distance[0] = 0;
+        System.out.println(Arrays.stream(distance).max().orElse(0));
     }
 }
 
-class Node {
+class Line {
 
-    private final String data;
-    private Node left;
-    private Node right;
+    private final int end;
+    private final int weight;
 
-    public Node(String data) {
-        this.data = data;
+    public Line(int end, int weight) {
+        this.end = end;
+        this.weight = weight;
     }
 
-    public String getData() {
-        return data;
+    public int getEnd() {
+        return end;
     }
 
-    public Node getLeft() {
-        return left;
-    }
-
-    public Node getRight() {
-        return right;
-    }
-
-    public void setLeft(Node left) {
-        this.left = left;
-    }
-
-    public void setRight(Node right) {
-        this.right = right;
+    public int getWeight() {
+        return weight;
     }
 }
