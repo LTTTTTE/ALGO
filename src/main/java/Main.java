@@ -1,93 +1,56 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        int size = Integer.parseInt(reader.readLine());
+    public static void main(String[] args) {
+        System.out.println(solution("ABABAAAAAAABA"));
+    }
 
-        Map<String, Node> tree = new HashMap<>();
-        for (int i = 0; i < size; i++) {
-            String[] inputs = reader.readLine().split(" ");
-            for (String input : inputs) {
-                if (!input.equals(".")) {
-                    tree.putIfAbsent(input, new Node(input));
+    public static int solution(String name) {
+        int answer = 0;
+        int[] names = new int[name.length()];
+
+        int index = 0;
+        for (byte i : name.getBytes(StandardCharsets.US_ASCII)) {
+            int number = i - 65;
+            if (number > 13) {
+                number = 26 - number;
+            }
+            names[index++] = number;
+        }
+
+        int now = 0;
+        while (isNotEnd(names)) {
+            answer += names[now];
+            names[now] = 0;
+            int nextIndex = minDistanceIndex(now, names);
+            if (nextIndex == -1) {
+                break;
+            }
+            int newDistance = Math.min(Math.abs(nextIndex - now), names.length - nextIndex + now);
+            answer+= newDistance;
+            now = nextIndex;
+        }
+        return answer;
+    }
+
+    public static boolean isNotEnd(int[] names) {
+        return Arrays.stream(names).anyMatch(x -> x != 0);
+    }
+
+    public static int minDistanceIndex(int now, int[] names) {
+        int distance = Integer.MAX_VALUE;
+        int index = -1;
+        for (int i = 0; i < names.length; i++) {
+            if (names[i] != 0) {
+                int newDistance = Math.min(Math.abs(i - now), names.length - i + now);
+                if (distance > newDistance) {
+                    distance = newDistance;
+                    index = i;
                 }
             }
-            if (!inputs[1].equals(".")) {
-                tree.get(inputs[0]).setLeft(tree.get(inputs[1]));
-            }
-            if (!inputs[2].equals(".")) {
-                tree.get(inputs[0]).setRight(tree.get(inputs[2]));
-            }
         }
-
-        first(tree.get("A"));
-        System.out.println();
-        mid(tree.get("A"));
-        System.out.println();
-        last(tree.get("A"));
-    }
-
-    public static void first(Node node) {
-        if (node == null) {
-            return;
-        }
-        System.out.print(node.getData());
-        first(node.getLeft());
-        first(node.getRight());
-    }
-
-    public static void mid(Node node) {
-        if (node == null) {
-            return;
-        }
-        mid(node.getLeft());
-        System.out.print(node.getData());
-        mid(node.getRight());
-    }
-
-    public static void last(Node node) {
-        if (node == null) {
-            return;
-        }
-        last(node.getLeft());
-        last(node.getRight());
-        System.out.print(node.getData());
-    }
-}
-
-class Node {
-
-    private final String data;
-    private Node left;
-    private Node right;
-
-    public Node(String data) {
-        this.data = data;
-    }
-
-    public String getData() {
-        return data;
-    }
-
-    public Node getLeft() {
-        return left;
-    }
-
-    public Node getRight() {
-        return right;
-    }
-
-    public void setLeft(Node left) {
-        this.left = left;
-    }
-
-    public void setRight(Node right) {
-        this.right = right;
+        return index;
     }
 }
