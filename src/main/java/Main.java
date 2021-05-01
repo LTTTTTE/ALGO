@@ -20,7 +20,6 @@ public class Main {
         Map<Integer, List<Line>> map = new HashMap<>();
 
         int start = 0;
-        int best = Integer.MAX_VALUE;
         for (int i = 0; i < costs.length; i++) {
             int[] input = costs[i];
             if (!map.containsKey(input[0])) {
@@ -31,15 +30,11 @@ public class Main {
                 map.put(input[1], new ArrayList<>());
             }
             map.get(input[1]).add(new Line(input[0], input[2]));
-
-            if (best > input[2]) {
-                best = input[2];
-                start = i;
-            }
+            start = input[0];
         }
 
         PriorityQueue<Line> queue = new PriorityQueue<>(Comparator.comparingInt(Line::getWeight));
-        queue.add(new Line(start, best));
+        queue.add(new Line(start, 0));
         while (!queue.isEmpty()) {
             Line now = queue.remove();
             if (visited[now.getEnd()]) {
