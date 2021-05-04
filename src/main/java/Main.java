@@ -7,29 +7,34 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String[] inputs = reader.readLine().split(" ");
+        int want = Integer.parseInt(inputs[1]);
+        int[] video = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
+        int start = Arrays.stream(video).max().getAsInt();
+        int end = Arrays.stream(video).sum();
 
-        int[] inputs = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
-        int sinHoCount = inputs[0];
-        int wantCount = inputs[1];
-        int brokenCount = inputs[2];
-        int[] sinHo = new int[sinHoCount];
-        for (int i = 0; i < brokenCount; i++) {
-            sinHo[Integer.parseInt(reader.readLine()) - 1] = 1;
+        int now;
+        while (start <= end) {
+            now = (start + end) / 2;
+            int sum = 0;
+            int count = 0;
+
+            for (int i = 0; i < video.length; i++) {
+                if (sum + video[i] > now) {
+                    sum = 0;
+                    count++;
+                }
+                sum += video[i];
+            }
+            if (sum > 0) {
+                count++;
+            }
+            if (count > want) {
+                start = now + 1;
+            } else {
+                end = now - 1;
+            }
         }
-        int start = 0;
-        int end = wantCount - 1;
-        int sum = 0;
-        for (int i = 0; i <= end; i++) {
-            sum += sinHo[i];
-        }
-        int answer = sum;
-        while (end + 1 < sinHoCount) {
-            int next = sum - sinHo[start] + sinHo[end + 1];
-            answer = Integer.min(next , answer);
-            sum = next;
-            start++;
-            end++;
-        }
-        System.out.println(answer);
+        System.out.println(start);
     }
 }
