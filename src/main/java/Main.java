@@ -9,16 +9,16 @@ public class Main {
     }
 
     public static String solution(int length, int now, String[] cmd) {
-        Point head = null;
+        Point head = new Point(-1);
         Point nowPoint = null;
         Point beforePoint = null;
         for (int i = 0; i < length; i++) {
             Point point = new Point(i);
             point.setBefore(beforePoint);
             if (beforePoint == null) {
-                head = point;
-            }
-            if (beforePoint != null) {
+                head.setNext(point);
+                point.setBefore(head);
+            } else {
                 beforePoint.setNext(point);
             }
             if (i == now) {
@@ -54,6 +54,8 @@ public class Main {
                     if (before != null) {
                         nowPoint = before;
                     }
+                } else {
+                    nowPoint = next;
                 }
                 continue;
             }
@@ -70,7 +72,12 @@ public class Main {
             }
         }
         List<String> answer = new ArrayList<>();
+        head = head.getNext();
         for (int i = 0; i < length; i++) {
+            if (head == null) {
+                answer.add("X");
+                continue;
+            }
             if (head.getIndex() == i) {
                 answer.add("O");
             } else {
@@ -81,67 +88,6 @@ public class Main {
         }
         return String.join("", answer);
     }
-    //    public static String solution2(int length, int now, String[] cmd) {
-//        now = now + 1;
-//        Map<Integer, Boolean> map = new HashMap<>();
-//        for (int i = 1; i <= length; i++) {
-//            map.put(i, true);
-//        }
-//        Stack<Integer> deleted = new Stack<>();
-//        for (int i = 0; i < cmd.length; i++) {
-//            if (cmd[i].startsWith("D")) {
-//                int value = Integer.parseInt(cmd[i].split(" ")[1]);
-//                for (int k = 1; k <= value; k++) {
-//                    if (!map.get(now + k)) {
-//                        value++;
-//                    }
-//                }
-//                now += value;
-//                continue;
-//            }
-//            if (cmd[i].startsWith("U")) {
-//                int value = Integer.parseInt(cmd[i].split(" ")[1]);
-//                for (int k = 1; k <= value; k++) {
-//                    if (!map.get(now - k)) {
-//                        value++;
-//                    }
-//                }
-//                now -= value;
-//                continue;
-//            }
-//            if (cmd[i].equals("C")) {
-//                map.replace(now, false);
-//                deleted.push(now);
-//                int value = 1;
-//                while (value + now <= length) {
-//                    if (!map.get(now + value)) {
-//                        value++;
-//                    } else {
-//                        break;
-//                    }
-//                }
-//                if (now + value <= length) {
-//                    now += value;
-//                } else {
-//                    value = 0;
-//                    while (value < now) {
-//                        if (!map.get(now - value)) {
-//                            value++;
-//                        } else {
-//                            break;
-//                        }
-//                    }
-//                    now -= value;
-//                }
-//                continue;
-//            }
-//            if (cmd[i].equals("Z")) {
-//                int value = deleted.pop();
-//                map.replace(value, true);
-//            }
-//        }
-//        return map.values().stream().map(x -> x ? "O" : "X").collect(Collectors.joining());
-//    }
 }
 
 class Point {
