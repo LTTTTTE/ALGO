@@ -7,29 +7,46 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        int nodeSize = Integer.parseInt(reader.readLine());
+        int lineSize = Integer.parseInt(reader.readLine());
 
-        int[] inputs = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
-        int sinHoCount = inputs[0];
-        int wantCount = inputs[1];
-        int brokenCount = inputs[2];
-        int[] sinHo = new int[sinHoCount];
-        for (int i = 0; i < brokenCount; i++) {
-            sinHo[Integer.parseInt(reader.readLine()) - 1] = 1;
+        int[][] distance = new int[nodeSize][nodeSize];
+
+        for (int i = 0; i < distance.length; i++) {
+            Arrays.fill(distance[i], Integer.MAX_VALUE / 2);
         }
-        int start = 0;
-        int end = wantCount - 1;
-        int sum = 0;
-        for (int i = 0; i <= end; i++) {
-            sum += sinHo[i];
+
+        for (int i = 0; i < distance.length; i++) {
+            for (int j = 0; j < distance[i].length; j++) {
+                if (i == j) {
+                    distance[i][j] = 0;
+                }
+            }
         }
-        int answer = sum;
-        while (end + 1 < sinHoCount) {
-            int next = sum - sinHo[start] + sinHo[end + 1];
-            answer = Integer.min(next , answer);
-            sum = next;
-            start++;
-            end++;
+
+        for (int i = 0; i < lineSize; i++) {
+            int[] inputs = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
+            distance[inputs[0] - 1][inputs[1] - 1] = Integer.min(distance[inputs[0] - 1][inputs[1] - 1], inputs[2]);
         }
-        System.out.println(answer);
+
+        for (int mid = 0; mid < nodeSize; mid++) {
+            for (int start = 0; start < nodeSize; start++) {
+                for (int end = 0; end < nodeSize; end++) {
+                    int before = distance[start][mid] + distance[mid][end];
+                    distance[start][end] = Integer.min(before, distance[start][end]);
+                }
+            }
+        }
+
+        for (int[] i : distance) {
+            for (int j : i) {
+                if (j == Integer.MAX_VALUE / 2) {
+                    System.out.print(0 + " ");
+                } else {
+                    System.out.print(j + " ");
+                }
+            }
+            System.out.println();
+        }
     }
 }
