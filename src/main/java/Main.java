@@ -9,40 +9,52 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        String[] inits = reader.readLine().split(" ");
-        int nodeSize = Integer.parseInt(inits[0]);
-        int lineSize = Integer.parseInt(inits[1]);
-        int start = 1;
-        List<Line> lines = new ArrayList<>();
-        long[] distance = new long[nodeSize + 1];
-        for (int i = 0; i < lineSize; i++) {
-            int[] inputs = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
-            lines.add(new Line(inputs[0], inputs[1], inputs[2]));
+        int caseSize = Integer.parseInt(reader.readLine());
+        boolean[] answer = new boolean[caseSize];
+        for (int c = 0; c < caseSize; c++) {
+            String[] inits = reader.readLine().split(" ");
+            int nodeSize = Integer.parseInt(inits[0]);
+            int lineSize = Integer.parseInt(inits[1]);
+            int wormSize = Integer.parseInt(inits[2]);
+
+            int start = 1;
+            List<Line> lines = new ArrayList<>();
+            long[] distance = new long[nodeSize + 1];
+            for (int i = 0; i < lineSize; i++) {
+                int[] inputs = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
+                lines.add(new Line(inputs[0], inputs[1], inputs[2]));
+                lines.add(new Line(inputs[1], inputs[0], inputs[2]));
+            }
+            for (int i = 0; i < wormSize; i++) {
+                int[] inputs = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
+                lines.add(new Line(inputs[0], inputs[1], -inputs[2]));
+            }
+            Arrays.fill(distance, Long.MAX_VALUE / 2);
+            distance[start] = 0;
+            answer[c] = bmf(nodeSize, distance, lines);
         }
 
-        Arrays.fill(distance, Long.MAX_VALUE);
-        distance[start] = 0;
+        for (int i = 0; i < answer.length; i++) {
+            if (answer[i]) {
+                System.out.println("YES");
+            } else {
+                System.out.println("NO");
+            }
+        }
+    }
 
+    public static boolean bmf(int nodeSize, long[] distance, List<Line> lines) {
         for (int i = 0; i < nodeSize; i++) {
             for (Line line : lines) {
-                if (distance[line.getStart()] == Long.MAX_VALUE) {
-                    continue;
-                }
                 if (distance[line.getEnd()] > distance[line.getStart()] + line.getWeight()) {
                     if (i == nodeSize - 1) {
-                        System.out.println(-1);
-                        return;
+                        return true;
                     }
                     distance[line.getEnd()] = distance[line.getStart()] + line.getWeight();
                 }
             }
         }
-        Arrays.stream(distance).skip(2).boxed().map(x -> {
-            if (x == Long.MAX_VALUE) {
-                return -1;
-            }
-            return x;
-        }).forEach(System.out::println);
+        return false;
     }
 }
 
