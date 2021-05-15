@@ -7,15 +7,14 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        String[] inits = reader.readLine().split(" ");
-        int nodeSize = Integer.parseInt(inits[0]);
-        int wantLength = Integer.parseInt(inits[1]);
-        int lineSize = Integer.parseInt(inits[2]);
-        int[] items = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
-        int[][] distance = new int[nodeSize][nodeSize];
+        int nodeSize = Integer.parseInt(reader.readLine());
+        int lineSize = Integer.parseInt(reader.readLine());
 
-        for (int[] i : distance) {
-            Arrays.fill(i, Integer.MAX_VALUE / 2);
+        int[][] distance = new int[nodeSize][nodeSize];
+        int[][] path = new int[nodeSize][nodeSize];
+
+        for (int i = 0; i < distance.length; i++) {
+            Arrays.fill(distance[i], Integer.MAX_VALUE / 2);
         }
 
         for (int i = 0; i < distance.length; i++) {
@@ -29,27 +28,40 @@ public class Main {
         for (int i = 0; i < lineSize; i++) {
             int[] inputs = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
             distance[inputs[0] - 1][inputs[1] - 1] = Integer.min(distance[inputs[0] - 1][inputs[1] - 1], inputs[2]);
-            distance[inputs[1] - 1][inputs[0] - 1] = Integer.min(distance[inputs[1] - 1][inputs[0] - 1], inputs[2]);
+            path[inputs[0] - 1][inputs[1] - 1] = inputs[0] - 1;
         }
 
         for (int mid = 0; mid < nodeSize; mid++) {
             for (int start = 0; start < nodeSize; start++) {
                 for (int end = 0; end < nodeSize; end++) {
-                    distance[start][end] = Integer.min(distance[start][mid] + distance[mid][end], distance[start][end]);
+                    int before = distance[start][mid] + distance[mid][end];
+                    if (distance[start][end] > before) {
+                        distance[start][end] = before;
+                        path[start][end] = mid;
+                    }
                 }
             }
         }
-        int[] answer = new int[distance.length];
-        for (int i = 0; i < distance.length; i++) {
-            int sum = 0;
-            for (int j = 0; j < distance[i].length; j++) {
-                if (distance[i][j] > wantLength) {
+
+        for (int[] i : distance) {
+            for (int j : i) {
+                if (j == Integer.MAX_VALUE / 2) {
+                    System.out.print(0 + " ");
+                } else {
+                    System.out.print(j + " ");
+                }
+            }
+            System.out.println();
+        }
+        System.out.println();
+        for (int i = 0; i < path.length; i++) {
+            for (int j = 0; j < path.length; j++) {
+                if (path[i][j] == Integer.MAX_VALUE / 2) {
+                    System.out.println(0);
                     continue;
                 }
-                sum += items[j];
+
             }
-            answer[i] = sum;
         }
-        System.out.println(Arrays.stream(answer).max().getAsInt());
     }
 }
