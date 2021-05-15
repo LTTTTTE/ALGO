@@ -7,11 +7,11 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        int nodeSize = Integer.parseInt(reader.readLine());
-        int lineSize = Integer.parseInt(reader.readLine());
+        String[] inits = reader.readLine().split(" ");
+        int nodeSize = Integer.parseInt(inits[0]);
+        int lineSize = Integer.parseInt(inits[1]);
 
         int[][] distance = new int[nodeSize][nodeSize];
-        int[][] path = new int[nodeSize][nodeSize];
 
         for (int i = 0; i < distance.length; i++) {
             Arrays.fill(distance[i], Integer.MAX_VALUE / 2);
@@ -27,8 +27,8 @@ public class Main {
 
         for (int i = 0; i < lineSize; i++) {
             int[] inputs = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
-            distance[inputs[0] - 1][inputs[1] - 1] = Integer.min(distance[inputs[0] - 1][inputs[1] - 1], inputs[2]);
-            path[inputs[0] - 1][inputs[1] - 1] = inputs[0] - 1;
+            distance[inputs[0] - 1][inputs[1] - 1] = Integer.min(distance[inputs[0] - 1][inputs[1] - 1], 1);
+            distance[inputs[1] - 1][inputs[0] - 1] = Integer.min(distance[inputs[1] - 1][inputs[0] - 1], 1);
         }
 
         for (int mid = 0; mid < nodeSize; mid++) {
@@ -37,31 +37,28 @@ public class Main {
                     int before = distance[start][mid] + distance[mid][end];
                     if (distance[start][end] > before) {
                         distance[start][end] = before;
-                        path[start][end] = mid;
                     }
                 }
             }
         }
 
-        for (int[] i : distance) {
-            for (int j : i) {
-                if (j == Integer.MAX_VALUE / 2) {
-                    System.out.print(0 + " ");
-                } else {
-                    System.out.print(j + " ");
-                }
-            }
-            System.out.println();
-        }
-        System.out.println();
-        for (int i = 0; i < path.length; i++) {
-            for (int j = 0; j < path.length; j++) {
-                if (path[i][j] == Integer.MAX_VALUE / 2) {
-                    System.out.println(0);
-                    continue;
-                }
+        int firstAnswer = 0;
+        int secondAnswer = 0;
+        int total = Integer.MAX_VALUE;
 
+        for (int first = 0; first < nodeSize; first++) {
+            for (int second = 0; second < nodeSize; second++) {
+                int sum = 0;
+                for (int house = 0; house < nodeSize; house++) {
+                    sum += Integer.min(distance[first][house], distance[second][house]);
+                }
+                if (total > sum) {
+                    firstAnswer = first;
+                    secondAnswer = second;
+                    total = sum;
+                }
             }
         }
+        System.out.println((firstAnswer + 1) + " " + (secondAnswer + 1) + " " + total * 2);
     }
 }
