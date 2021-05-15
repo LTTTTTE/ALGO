@@ -1,7 +1,9 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Main {
 
@@ -10,55 +12,61 @@ public class Main {
         String[] inits = reader.readLine().split(" ");
         int nodeSize = Integer.parseInt(inits[0]);
         int lineSize = Integer.parseInt(inits[1]);
-
-        int[][] distance = new int[nodeSize][nodeSize];
-
-        for (int i = 0; i < distance.length; i++) {
-            Arrays.fill(distance[i], Integer.MAX_VALUE / 2);
-        }
-
-        for (int i = 0; i < distance.length; i++) {
-            for (int j = 0; j < distance[i].length; j++) {
-                if (i == j) {
-                    distance[i][j] = 0;
-                }
-            }
-        }
-
+        int start = 1;
+        List<Line> lines = new ArrayList<>();
+        long[] distance = new long[nodeSize + 1];
         for (int i = 0; i < lineSize; i++) {
             int[] inputs = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
-            distance[inputs[0] - 1][inputs[1] - 1] = Integer.min(distance[inputs[0] - 1][inputs[1] - 1], 1);
-            distance[inputs[1] - 1][inputs[0] - 1] = Integer.min(distance[inputs[1] - 1][inputs[0] - 1], 1);
+            lines.add(new Line(inputs[0], inputs[1], inputs[2]));
         }
 
-        for (int mid = 0; mid < nodeSize; mid++) {
-            for (int start = 0; start < nodeSize; start++) {
-                for (int end = 0; end < nodeSize; end++) {
-                    int before = distance[start][mid] + distance[mid][end];
-                    if (distance[start][end] > before) {
-                        distance[start][end] = before;
+        Arrays.fill(distance, Long.MAX_VALUE);
+        distance[start] = 0;
+
+        for (int i = 0; i < nodeSize; i++) {
+            for (Line line : lines) {
+                if (distance[line.getStart()] == Long.MAX_VALUE) {
+                    continue;
+                }
+                if (distance[line.getEnd()] > distance[line.getStart()] + line.getWeight()) {
+                    if (i == nodeSize - 1) {
+                        System.out.println(-1);
+                        return;
                     }
+                    distance[line.getEnd()] = distance[line.getStart()] + line.getWeight();
                 }
             }
         }
-
-        int firstAnswer = 0;
-        int secondAnswer = 0;
-        int total = Integer.MAX_VALUE;
-
-        for (int first = 0; first < nodeSize; first++) {
-            for (int second = 0; second < nodeSize; second++) {
-                int sum = 0;
-                for (int house = 0; house < nodeSize; house++) {
-                    sum += Integer.min(distance[first][house], distance[second][house]);
-                }
-                if (total > sum) {
-                    firstAnswer = first;
-                    secondAnswer = second;
-                    total = sum;
-                }
+        Arrays.stream(distance).skip(2).boxed().map(x -> {
+            if (x == Long.MAX_VALUE) {
+                return -1;
             }
-        }
-        System.out.println((firstAnswer + 1) + " " + (secondAnswer + 1) + " " + total * 2);
+            return x;
+        }).forEach(System.out::println);
+    }
+}
+
+class Line {
+
+    private final int start;
+    private final int end;
+    private final int weight;
+
+    public Line(int start, int end, int weight) {
+        this.start = start;
+        this.end = end;
+        this.weight = weight;
+    }
+
+    public int getStart() {
+        return start;
+    }
+
+    public int getEnd() {
+        return end;
+    }
+
+    public int getWeight() {
+        return weight;
     }
 }
