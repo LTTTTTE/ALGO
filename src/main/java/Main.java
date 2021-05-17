@@ -3,86 +3,58 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.PriorityQueue;
+import java.util.Queue;
 
 public class Main {
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        String[] inits = reader.readLine().split(" ");
-        int nodeSize = Integer.parseInt(inits[0]);
-        int lineSize = Integer.parseInt(inits[1]);
-        int start = Integer.parseInt(inits[2]);
-        Map<Integer, List<Line>> map = new HashMap<>();
-        Map<Integer, List<Line>> reverse = new HashMap<>();
-        int[] distance = new int[nodeSize + 1];
-        int[] reverseDistance = new int[nodeSize + 1];
-        Arrays.fill(distance, Integer.MAX_VALUE);
-        Arrays.fill(reverseDistance, Integer.MAX_VALUE);
-
-        for (int i = 0; i < lineSize; i++) {
-            int[] inputs = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
-            if (!map.containsKey(inputs[0])) {
-                map.put(inputs[0], new ArrayList<>());
+        int caseSize = Integer.parseInt(reader.readLine());
+        for (int c = 0; c < caseSize; c++) {
+            int[] inits = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
+            int nodeSize = inits[0];
+            int lineSize = inits[1];
+            int[] needTimes = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
+            int[] eachTimes = new int[nodeSize];
+            int[] beforeSize = new int[nodeSize];
+            Map<Integer, List<Integer>> map = new HashMap<>();
+            for (int i = 0; i < lineSize; i++) {
+                int[] inputs = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).map(x -> x - 1)
+                    .toArray();
+                if (!map.containsKey(inputs[0])) {
+                    map.put(inputs[0], new ArrayList<>());
+                }
+                map.get(inputs[0]).add(inputs[1]);
+                beforeSize[inputs[1]]++;
             }
-            map.get(inputs[0]).add(new Line(inputs[1], inputs[2]));
+            int endPoint = Integer.parseInt(reader.readLine()) - 1;
 
-            if (!reverse.containsKey(inputs[1])) {
-                reverse.put(inputs[1], new ArrayList<>());
+            Queue<Integer> queue = new LinkedList<>();
+            for (int i = 0; i < beforeSize.length; i++) {
+                if (beforeSize[i] == 0) {
+                    queue.add(i);
+                }
+                eachTimes[i] = needTimes[i];
             }
-            reverse.get(inputs[1]).add(new Line(inputs[0], inputs[2]));
-        }
+            while (!queue.isEmpty()) {
+                int now = queue.remove();
+                List<Integer> nextNodes = Optional.ofNullable(map.get(now)).orElse(new ArrayList<>());
 
-        d(start, map, distance);
-        d(start, reverse, reverseDistance);
+                for (int next : nextNodes) {
+                    eachTimes[next] = Integer.max(needTimes[next] + eachTimes[now], eachTimes[next]);
+                    beforeSize[next]--;
 
-        int answer = 0;
-        for (int i = 0; i < distance.length; i++) {
-            answer = Integer.max(answer, distance[i] + reverseDistance[i]);
-        }
-
-        System.out.println(answer);
-    }
-
-    private static void d(int start, Map<Integer, List<Line>> map, int[] distance) {
-        distance[start] = 0;
-        PriorityQueue<Line> queue = new PriorityQueue<>(Comparator.comparingInt(Line::getWeight));
-        queue.add(new Line(start, 0));
-
-        while (!queue.isEmpty()) {
-            Line now = queue.remove();
-            List<Line> lines = Optional.ofNullable(map.get(now.getEnd())).orElse(new ArrayList<>());
-
-            for (Line line : lines) {
-                if (distance[line.getEnd()] > line.getWeight() + now.getWeight()) {
-                    distance[line.getEnd()] = line.getWeight() + now.getWeight();
-                    queue.add(new Line(line.getEnd(), distance[line.getEnd()]));
+                    if (beforeSize[next] == 0) {
+                        queue.add(next);
+                    }
                 }
             }
+            System.out.println(eachTimes[endPoint]);
         }
-    }
-}
-
-class Line {
-
-    private final int end;
-    private final int weight;
-
-    public Line(int end, int weight) {
-        this.end = end;
-        this.weight = weight;
-    }
-
-    public int getEnd() {
-        return end;
-    }
-
-    public int getWeight() {
-        return weight;
     }
 }
