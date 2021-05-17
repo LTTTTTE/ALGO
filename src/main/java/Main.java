@@ -2,70 +2,118 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.PriorityQueue;
-import java.util.Set;
+import java.util.Queue;
 
 public class Main {
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        String input = reader.readLine();
-        Map<String, List<String>> map = new HashMap<>();
-        Map<String, Integer> time = new HashMap<>();
-        Map<String, Integer> beforeSize = new HashMap<>();
-        Map<String, Integer> total = new HashMap<>();
-        Set<String> noLeaf = new HashSet<>();
-        do {
-            String[] inputs = input.split(" ");
-            time.put(inputs[0], Integer.parseInt(inputs[1]));
-            if (inputs.length > 2) {
-                String[] beforeInputs = inputs[2].split("");
-                beforeSize.put(inputs[0], beforeInputs.length);
-                for (String before : beforeInputs) {
-                    noLeaf.add(before);
-                    if (!map.containsKey(before)) {
-                        map.put(before, new ArrayList<>());
-                    }
-                    map.get(before).add(inputs[0]);
-                }
-            } else {
-                beforeSize.put(inputs[0], 0);
+        int nodeSize = Integer.parseInt(reader.readLine());
+        int lineSize = Integer.parseInt(reader.readLine());
+        Map<Pair, Integer> weights = new HashMap<>();
+        int[] beforeSize = new int[nodeSize];
+        int[] totalWeight = new int[nodeSize];
+        boolean[] visited = new boolean[nodeSize];
+        Map<Integer, List<Integer>> map = new HashMap<>();
+        Map<Integer, List<Integer>> invertMap = new HashMap<>();
+        for (int i = 0; i < lineSize; i++) {
+            int[] inputs = Arrays.stream(reader.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
+            int start = inputs[0] - 1;
+            int end = inputs[1] - 1;
+            int weight = inputs[2];
+            if (!map.containsKey(start)) {
+                map.put(start, new ArrayList<>());
             }
-        } while ((input = reader.readLine()) != null);
-        Set<String> leaf = new HashSet<>(time.keySet());
-        leaf.removeAll(noLeaf);
+            map.get(start).add(end);
+            weights.put(new Pair(start, end), weight);
+            beforeSize[end]++;
 
-        PriorityQueue<String> queue = new PriorityQueue<>(Comparator.comparingInt(time::get));
-        for (String each : beforeSize.keySet()) {
-            if (beforeSize.get(each).equals(0)) {
-                queue.add(each);
+            if (!invertMap.containsKey(end)) {
+                invertMap.put(end, new ArrayList<>());
             }
-            total.put(each, time.get(each));
+            invertMap.get(end).add(start);
         }
+        String[] inits = reader.readLine().split(" ");
+        int start = Integer.parseInt(inits[0]) - 1;
+        int end = Integer.parseInt(inits[1]) - 1;
 
+        Queue<Integer> queue = new LinkedList<>();
+        queue.add(start);
         while (!queue.isEmpty()) {
-            String now = queue.remove();
-            List<String> nextNodes = Optional.ofNullable(map.get(now)).orElse(new ArrayList<>());
-            for (String next : nextNodes) {
-                int cost = Integer.max(total.get(next), total.get(now) + time.get(next));
-                total.put(next, cost);
-                beforeSize.put(next, beforeSize.get(next) - 1);
+            int now = queue.remove();
+            List<Integer> nextNodes = Optional.ofNullable(map.get(now)).orElse(new ArrayList<>());
+            for (int next : nextNodes) {
+                totalWeight[next] = Integer.max(totalWeight[next], totalWeight[now] + weights.get(new Pair(now, next)));
+                beforeSize[next]--;
 
-                if (beforeSize.get(next).equals(0)) {
+                if (beforeSize[next] == 0) {
                     queue.add(next);
                 }
             }
         }
-        int answer = Integer.MIN_VALUE;
-        for (String each : leaf) {
-            answer = Integer.max(total.get(each), answer);
+        System.out.println(totalWeight[end]);
+        int answer = 0;
+        queue.add(end);
+        while (!queue.isEmpty()) {
+            int now = queue.remove();
+            List<Integer> nextNodes = Optional.ofNullable(invertMap.get(now)).orElse(new ArrayList<>());
+            for (int next : nextNodes) {
+                int nowWeight = totalWeight[now];
+                int beforeTotalWeight = totalWeight[next];
+                int roadWeight = weights.get(new Pair(next, now));
+                if (beforeTotalWeight + roadWeight == nowWeight) {
+                    answer++;
+                    if (visited[next] && next != start) {
+                        continue;
+                    }
+                    visited[next] = true;
+                    queue.add(next);
+                }
+            }
         }
         System.out.println(answer);
+    }
+}
+
+class Pair {
+
+    private final int start;
+    private final int end;
+
+    public Pair(int start, int end) {
+        this.start = start;
+        this.end = end;
+    }
+
+    public int getStart() {
+        return start;
+    }
+
+    public int getEnd() {
+        return end;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Pair pair = (Pair) o;
+        return start == pair.start && end == pair.end;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(start, end);
     }
 }
